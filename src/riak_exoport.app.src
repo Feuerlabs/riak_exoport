@@ -1,0 +1,27 @@
+%% -*- erlang -*-
+{application, riak_exoport,
+ [
+  {description, ""},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {mod, { riak_exoport_app, []}},
+  {env, [
+	 {kvdb_databases,
+	  [
+	   {kvdb_conf, [{backend, kvdb_pets},
+			{module1, kvdb_ets},
+			{module2, kvdb_riak},
+			{options2, [{update_index, false},
+				    {riak, {pb, local}}]},
+			{tables,
+			 [
+			  {kvdb_conf, [{encoding, {raw,term,term}}]}
+			 ]}
+		       ]}
+	  ]}
+	]}
+ ]}.

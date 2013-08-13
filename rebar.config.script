@@ -1,0 +1,2 @@
+os:putenv("KVDB_BACKENDS", "ets").
+CONFIG.
