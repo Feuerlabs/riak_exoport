@@ -6,20 +6,21 @@
   {registered, []},
   {applications, [
                   kernel,
-                  stdlib
+                  stdlib,
+		  exoport
                  ]},
   {mod, { riak_exoport_app, []}},
   {env, [
 	 {kvdb_databases,
 	  [
-	   {kvdb_conf, [{backend, kvdb_pets},
+	   {kvdb_conf, [{backend, kvdb_paired},
 			{module1, kvdb_ets},
 			{module2, kvdb_riak},
 			{options2, [{update_index, false},
 				    {riak, {pb, local}}]},
 			{tables,
 			 [
-			  {kvdb_conf, [{encoding, {raw,term,term}}]}
+			  {data, [{encoding, {raw,term,term}}]}
 			 ]}
 		       ]}
 	  ]}

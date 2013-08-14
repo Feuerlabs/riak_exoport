@@ -1,0 +1,87 @@
+module riak-stats {
+
+  namespace "http://basho.com/riak-stats";
+  prefix riak-stats;
+
+  import exosense {
+    prefix exo;
+  }
+
+  description
+    "JSON-RPC spec for management of statistics and diagnostics in " +
+    "Riak clusters.";
+
+  typedef id-string {
+    description "Common type for string identifiers in exodm";
+    type string {
+      length "1..64";
+    }
+  }
+
+  typedef node-type {
+    type enumeration {
+      enum cluster;
+      enum node;
+      enum vnode;
+      enum data-point;
+      enum probe;
+    }
+  }
+
+  typedef interval {
+    description "Interval (e.g. sample interval) in milliseconds.";
+    type uint32;
+  }
+
+  typedef duration {
+    description "Duration in milliseconds.";
+    type uint64;
+  }
+
+  typedef threshold {
+    description "Trigger or release threshold";
+    type uint64;
+  }
+
+  grouping node {
+    leaf node-type{ type node-type; mandatory true; }
+    leaf node-subtype { type id-string; }
+    leaf name { type id-string; mandatory true; }
+    leaf sample-interval { type interval; }
+    leaf sample-period { type duration; }
+    leaf trigger-at { type threshold; }
+    leaf reset-at { type threshold; }
+    leaf sustain-period { type duration; }
+    leaf-list subscribers { type id-string; }
+    leaf-list collects { type id-string; }
+  }
+
+  rpc list-children {
+    description "List the children of a given stats node";
+
+    input {
+      uses exo:std-request;
+
+      leaf device-id { type id-string; mandatory true; }
+
+      leaf parent {
+	description "Parent node";
+	type id-string;
+	mandatory true;
+      }
+      leaf n {
+	description "Number of entries to fetch.";
+	type uint32;
+	mandatory true;
+      }
+      leaf previous { type id-string; }
+    }
+
+    output {
+      list children {
+	uses node;
+      }
+    }
+  }
+
+}
