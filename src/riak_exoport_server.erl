@@ -17,10 +17,6 @@ start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 init([]) ->
-    dbg:tracer(),
-    dbg:tpl(?MODULE,x),
-    dbg:tp(kvdb_conf,x),
-    dbg:p(all,[c]),
     {ok, check_stats(maybe_connect(#st{}))}.
 
 
@@ -77,9 +73,12 @@ check_folsom_stats(Stats) ->
 	      end
       end, Stats).
 
-folsom_name_to_key(Name, Prefix) ->
+folsom_name_to_key(Name0, Prefix) ->
+    Name = if is_tuple(Name0) -> tuple_to_list(Name0);
+	      is_list(Name0)  -> Name0
+	   end,
     kvdb_conf:join_key(Prefix ++ [atom_to_binary(A,latin1)
-				  || A <- tuple_to_list(Name)]).
+				  || A <- Name]).
 
 write_folsom_metric(Key, Info, User) ->
     kvdb_conf:write({Key, [{user, User}], <<>>}),
