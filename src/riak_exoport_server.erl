@@ -39,10 +39,10 @@ code_change(_, S, _) ->
     {ok, S}.
 
 check_stats(#st{} = S) ->
-    FolsomMetrics = folsom_metrics:get_metrics_info(),
+    Metrics = exometer_entry:find_entries(),
     transaction(
       fun(_) ->
-	      check_folsom_stats(FolsomMetrics)
+	      check_stats(Metrics)
       end),
     S.
 
@@ -54,11 +54,11 @@ transaction(F) ->
 	      kvdb_conf:transaction(F)
       end).
 
-check_folsom_stats(Stats) ->
+check_stats(Stats) ->
     Prefix = [<<"riak-stats">>, <<"node">>, atom_to_binary(node(), latin1)],
     lists:foreach(
       fun({Name, Info}) ->
-	      Key = folsom_name_to_key(Name, Prefix),
+	      Key = name_to_key(Name, Prefix),
 	      case kvdb_conf:read(Key) of
 		  {ok, {_, Opts, _}} ->
 		      case lists:keyfind(user, 1, Opts) of
@@ -66,31 +66,31 @@ check_folsom_stats(Stats) ->
 			      skip;
 			  _ ->
 			      %% should perhaps audit the entry?
-			      write_folsom_metric(Key, Info, false)
+			      write_metric(Key, Info, false)
 		      end;
 		  {error, _} ->
-		      write_folsom_metric(Key, Info, false)
+		      write_metric(Key, Info, false)
 	      end
       end, Stats).
 
-folsom_name_to_key(Name0, Prefix) ->
+name_to_key(Name0, Prefix) ->
     Name = if is_tuple(Name0) -> tuple_to_list(Name0);
 	      is_list(Name0)  -> Name0
 	   end,
     kvdb_conf:join_key(Prefix ++ [atom_to_binary(A,latin1)
 				  || A <- Name]).
 
-write_folsom_metric(Key, Info, User) ->
+write_metric(Key, Info, User) ->
     kvdb_conf:write({Key, [{user, User}], <<>>}),
     Type = atom_to_binary(proplists:get_value(type, Info), latin1),
     kvdb_conf:write_tree(
-      Key, [{<<"node-type">>, [], folsom_node_type(Type)},
+      Key, [{<<"node-type">>, [], node_type(Type)},
 	    {<<"node-subtype">>, [], Type}]).
 
-folsom_node_type(<<"meter">>) -> <<"data-point">>;
-folsom_node_type(<<"counter">>) -> <<"data-point">>;
-folsom_node_type(<<"gauge">>) -> <<"data-point">>;
-folsom_node_type(_) -> <<"probe">>.
+node_type(<<"meter">>) -> <<"data-point">>;
+node_type(<<"counter">>) -> <<"data-point">>;
+node_type(<<"gauge">>) -> <<"data-point">>;
+node_type(_) -> <<"probe">>.
 
 maybe_connect(#st{connected = N} = S) when N == node() ->
     S;
